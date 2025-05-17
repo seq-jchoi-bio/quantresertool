@@ -1,0 +1,17 @@
+# junk
+.DS_Store
+
+# private
+.env
+config.json
+encrypt-config.js
+
+# log
+*.log
+npm-debug.log
+
+# build and dependencies
+node_modules/
+dist/
+out/
+

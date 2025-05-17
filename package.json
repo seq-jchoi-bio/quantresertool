@@ -1,0 +1,46 @@
+{
+  "name": "quantresertool",
+  "version": "1.0.0",
+  "description": "QuantStudio Real-Time PCR 시스템 예약 관리 프로그램",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "pack": "electron-builder --dir",
+    "dist": "electron-builder"
+  },
+  "build": {
+    "appId": "com.inha.quantreser",
+    "productName": "QuantReserTool",
+    "files": [
+      "**/*",
+      "assets/**",
+      "config.enc",
+      "!config.json",
+      "!encrypt-config.js"
+    ],
+    "directories": {
+      "buildResources": "assets"
+    },
+    "mac": {
+      "target": [
+        "dmg"
+      ],
+      "icon": "assets/icon.icns"
+    },
+    "dmg": {
+      "icon": "assets/icon.icns"
+    }
+  },
+  "devDependencies": {
+    "electron": "^28.0.0",
+    "electron-builder": "^24.13.3"
+  },
+  "dependencies": {
+    "axios": "^1.9.0",
+    "dotenv": "^16.4.7",
+    "google-auth-library": "^9.15.1",
+    "googleapis": "^148.0.0",
+    "open": "^10.1.0",
+    "xlsx": "^0.18.5"
+  }
+}
