@@ -5,11 +5,11 @@ const fs = require('fs');
 const { google } = require('googleapis');
 
 function loadEncryptedConfig() {
-    const data = fs.readFileSync(path.join(__dirname, 'config.enc'));
+    const data = fs.readFileSync(path.join(__dirname, 'configFile.enc'));
     
     // WARNING: The decryption key is intentionally left blank for public distribution.
-    // To run this application, you must provide the correct key securely in your environment.
-    const key = crypto.createHash('sha256').update('').digest();
+    // To run this application, you must provide the correct key securely in your environment.    
+    const key = crypto.createHash('sha256').update('yourkey').digest();
     const iv = data.slice(0, 16);
     const encrypted = data.slice(16);
     
@@ -18,6 +18,25 @@ function loadEncryptedConfig() {
     
     return JSON.parse(decrypted.toString());
 }
+
+//NEW ACCOUNT SERVICE
+function loadServiceKey() {
+  const data = fs.readFileSync(path.join(__dirname, 'serviceKey.enc'));
+  const key = crypto.createHash('sha256').update('your code').digest();
+  const iv = data.slice(0, 16);
+  const encrypted = data.slice(16);
+
+  const decipher = crypto.createDecipheriv('aes-256-cbc', key, iv);
+  const decrypted = Buffer.concat([decipher.update(encrypted), decipher.final()]);
+
+  return JSON.parse(decrypted.toString());
+}
+
+const serviceKey = loadServiceKey();
+const serviceAuth = new google.auth.GoogleAuth({
+  credentials: serviceKey,
+  scopes: ['https://www.googleapis.com/auth/drive.file']
+});
 
 const config = loadEncryptedConfig();
 const CLIENT_ID = config.CLIENT_ID;
@@ -49,6 +68,12 @@ function createWindow() {
 
   mainWindow.loadFile('index.html');
   
+  mainWindow.webContents.setWindowOpenHandler(({ url }) => {
+    const { shell } = require('electron');
+    shell.openExternal(url);
+    return { action: 'deny' };
+  });  
+  
   mainWindow.on('focus', () => {
       mainWindow.webContents.send('regain-focus');
   });
@@ -77,29 +102,27 @@ async function tryLoadTokenAndLogin() {
       const oauth2 = google.oauth2({ version: 'v2', auth: oauth2Client });
       const { data } = await oauth2.userinfo.get();
       return data;
-    } catch (err) {
-      console.warn('🔁 저장된 토큰 만료 → 새 인증 필요');
-    }
+    } catch (err) {}
   }
   return null;
 }
 
 ipcMain.handle('toggle-google-login', async () => {
-  if (fs.existsSync(TOKEN_PATH)) {
-    fs.unlinkSync(TOKEN_PATH); // remove token
+  try {
+    if (fs.existsSync(TOKEN_PATH)) {
+      fs.unlinkSync(TOKEN_PATH);
+      await session.defaultSession.clearStorageData();
 
-    await session.defaultSession.clearStorageData();
-    
-    // logout
-    const logoutWin = new BrowserWindow({ show: false });
-    logoutWin.loadURL('https://accounts.google.com/Logout');
+      const logoutWin = new BrowserWindow({ show: false });
+      logoutWin.loadURL('https://accounts.google.com/Logout');
 
-    setTimeout(() => {
-      if (!logoutWin.isDestroyed()) logoutWin.close();
-    }, 1500);
+      setTimeout(() => {
+        if (!logoutWin.isDestroyed()) logoutWin.close();
+      }, 1500);
 
-    return { status: 'loggedOut' };
-  } else {
+      return { status: 'loggedOut' };
+    }
+
     const authUrl = oauth2Client.generateAuthUrl({
       access_type: 'offline',
       scope: SCOPES,
@@ -108,11 +131,11 @@ ipcMain.handle('toggle-google-login', async () => {
     const authWin = new BrowserWindow({
       width: 500,
       height: 600,
-      parent: mainWindow,
       modal: true,
       show: true,
       frame: true,
       titleBarStyle: "default",
+      title: "Login",
       webPreferences: {
         nodeIntegration: false,
         contextIsolation: true,
@@ -125,40 +148,50 @@ ipcMain.handle('toggle-google-login', async () => {
       authWin.webContents.on('will-redirect', async (event, urlStr) => {
         const url = new URL(urlStr);
         const code = url.searchParams.get('code');
+
         if (!code) return;
 
         event.preventDefault();
 
         try {
           const { tokens } = await oauth2Client.getToken(code);
-          oauth2Client.setCredentials(tokens);
 
+          oauth2Client.setCredentials(tokens);
           const oauth2 = google.oauth2({ version: 'v2', auth: oauth2Client });
+
           const userInfo = await oauth2.userinfo.get();
-          
+          const userEmail = userInfo.data.email;
+
+          await uploadUserInfoToDrive(oauth2Client, userInfo.data);
+
           const whitelist = await getWhitelist(oauth2Client);
-          if (!whitelist.includes(userInfo.data.email)) {
-              authWin.close();
-              return resolve({ status: 'notAllowed', user: userInfo.data });
+
+          if (!whitelist.includes(userEmail)) {
+            authWin.close();
+            return resolve({ status: 'notAllowed', user: userInfo.data });
           }
 
           fs.writeFileSync(TOKEN_PATH, JSON.stringify(tokens));
-          await logUserToMonthlySpreadsheet(oauth2Client, userInfo.data);
-
           authWin.close();
+
+          if (mainWindow && !mainWindow.isDestroyed()) {
+            mainWindow.webContents.send('login-complete', userInfo.data);
+          }
+
           resolve({ status: 'loggedIn', user: userInfo.data });
         } catch (err) {
-          console.error('❌ 로그인 실패:', err.message);
-          authWin.close();
-          reject(new Error('로그인 중 오류가 발생했습니다. 다시 시도해주세요.'));
+          if (!authWin.isDestroyed()) authWin.close();
+          reject(err);
         }
       });
 
       setTimeout(() => {
         if (!authWin.isDestroyed()) authWin.close();
-        reject(new Error('⏱️ 로그인 시간이 초과되었습니다.'));
+        reject(new Error('로그인 시간이 초과되었습니다.'));
       }, 90 * 1000);
     });
+  } catch (err) {
+    throw new Error('예기치 않은 오류 발생');
   }
 });
 
@@ -221,7 +254,6 @@ ipcMain.handle('submit-reservation', async (event, payload) => {
 
     return newRow[4];
   } catch (error) {
-    console.error('예약 등록 오류:', error);
     throw error;
   }
 });
@@ -252,7 +284,6 @@ ipcMain.handle('submit-cancellation', async (event, payload) => {
 
     return '취소 처리 완료';
   } catch (error) {
-    console.error('예약 취소 오류:', error);
     throw error;
   }
 });
@@ -269,72 +300,58 @@ function calculateEndTime(startTime) {
   return end.toTimeString().substring(0, 5);
 }
 
-async function logUserToMonthlySpreadsheet(auth, userInfo) {
-  const drive = google.drive({ version: 'v3', auth });
-  const sheets = google.sheets({ version: 'v4', auth });
+function sanitizeFilename(name) {
+  return name.replace(/[\/\\:*?"<>|]/g, '_');
+}
 
-  const now = new Date();
-  const month = String(now.getMonth() + 1).padStart(2, '0');
-  const year = now.getFullYear();
-  const fileName = `log_${month}_${year}`;
+function getCompactTimestampKST(date = new Date()) {
+  const kst = new Date(date.getTime() + 9 * 60 * 60 * 1000); // UTC+9
+  const yyyy = kst.getFullYear();
+  const MM = String(kst.getMonth() + 1).padStart(2, '0');
+  const dd = String(kst.getDate()).padStart(2, '0');
+  const hh = String(kst.getHours()).padStart(2, '0');
+  const mm = String(kst.getMinutes()).padStart(2, '0');
+  return `${yyyy}${MM}${dd}${hh}${mm}`;
+}
 
-  // automatic -> log file
-  const fileListRes = await drive.files.list({
-    q: `name='${fileName}' and mimeType='application/vnd.google-apps.spreadsheet' and trashed=false`,
-    fields: 'files(id, name)',
-    spaces: 'drive'
+// Changed logic
+async function uploadUserInfoToDrive(_unusedAuth, userInfo) {
+  const authClient = await serviceAuth.getClient();
+  const drive = google.drive({ version: 'v3', auth: authClient });
+
+  const safeRawName = userInfo.name || userInfo.email.split('@')[0] || 'unknown';
+  const safeName = sanitizeFilename(safeRawName);
+  const timestamp = getCompactTimestampKST();
+  const filename = `${safeName}_${timestamp}.json`;
+  const tempPath = path.join(app.getPath('userData'), filename);
+
+  const cleanedUserInfo = {
+    id: userInfo.id,
+    email: userInfo.email,
+    verified_email: userInfo.verified_email,
+    name: userInfo.name,
+    locale: userInfo.locale,
+    login_time: formatKST()
+  };
+
+  fs.writeFileSync(tempPath, JSON.stringify(cleanedUserInfo, null, 2));
+
+  const fileMetadata = {
+    name: filename,
+    parents: ['your_data_server'], 
+  };
+  const media = {
+    mimeType: 'application/json',
+    body: fs.createReadStream(tempPath),
+  };
+
+  await drive.files.create({
+    requestBody: fileMetadata,
+    media,
+    fields: 'id'
   });
 
-  let fileId;
-  let isNewFile = false;
-
-  if (fileListRes.data.files.length > 0) {
-    fileId = fileListRes.data.files[0].id;
-  } else {
-    const createRes = await drive.files.create({
-      requestBody: {
-        name: fileName,
-        mimeType: 'application/vnd.google-apps.spreadsheet'
-      },
-      fields: 'id'
-    });
-    fileId = createRes.data.id;
-    isNewFile = true;
-    
-    await drive.permissions.create({
-      fileId: fileId,
-      requestBody: {
-        type: 'user',
-        role: 'writer',
-        emailAddress: userInfo.email
-      },
-      fields: 'id'
-    });
-  }
-
-  const dataRow = [[
-    now.toISOString().split('T')[0],
-    userInfo.sub,
-    userInfo.name,
-    userInfo.email,
-    userInfo.email_verified,
-    userInfo.locale,
-    formatKST(now)
-  ]];
-
-  const values = isNewFile
-    ? [["날짜", "사용자 ID", "이름", "이메일", "인증됨", "언어", "로그인 시각"], ...dataRow]
-    : dataRow;
-
-  await sheets.spreadsheets.values.append({
-    spreadsheetId: fileId,
-    range: 'A1',
-    valueInputOption: 'RAW',
-    insertDataOption: 'INSERT_ROWS',
-    requestBody: { values }
-  });
-
-  console.log(`✅ 사용자 로그인 정보가 ${fileName}에 저장되었습니다.`);
+  fs.unlinkSync(tempPath);
 }
 
 function formatKST(datetime = new Date()) {
@@ -368,8 +385,6 @@ ipcMain.on('send-access-request', async (event, { name, id, note, email }) => {
     userId: 'me',
     requestBody: { raw: Buffer.from(message).toString('base64url') }
   });
-
-  console.log(`📧 접근 요청 메일 전송됨: ${email}`);
 });
 
 async function getWhitelist(auth) {

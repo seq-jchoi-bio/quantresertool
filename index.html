@@ -16,7 +16,7 @@
   <body class="bg-white text-gray-800 p-6">
     <div class="flex items-center justify-between mb-10">
       <h1 class="text-4xl font-bold">
-        QuantStudio 1 System 예약 프로그램 <span class="text-sm text-gray-500">v.1.0.0</span>
+        QuantStudio 1 System 예약 프로그램 <span class="text-sm text-gray-500">v.1.1.0</span>
       </h1>
       <button id="googleLoginBtn" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded shadow">
         🔐 Google 로그인
@@ -28,7 +28,6 @@
     
       <ul class="list-disc list-inside space-y-1 pl-4">
         <li><strong>본 프로그램은 생명과학과 공동기기실의 QuantStudio 1 Real-Time PCR System 사용을 위한 예약 시스템입니다.</strong></li>
-        <li>기존 네이버 밴드의 불편함을 개선하여, 보다 직관적이고 효율적인 관리가 가능하도록 제작되었습니다.</li>
         <li>본 프로그램은 오픈소스(MIT license)이며, 상세 정보는 <a href="https://github.com/seq-jchoi-bio/quantresertool" target="_blank" class="text-blue-600 underline">개발자 GitHub</a>에서 확인하실 수 있습니다.</li>
         <li>Google 로그인이 필수이며, <strong>개발자는 장비 관리를 위해 사용자의 이름, 이메일, 프로그램 사용 시간, 장비 예약 정보를 수집합니다.</strong></li>
         <li><strong>오류나 버그는 즉시 개발자/담당자에게 보고해주세요.</strong> 이를 악의적으로 사용하는 행위(기능 마비, 개인정보/인증정보 탈취)는 <strong>정보통신망법, 형법, 개인정보보호법</strong>에 따라 형사처벌의 대상이 됩니다.</li>
@@ -76,9 +75,9 @@
     <div class="flex items-center gap-2 mb-2">
       <span class="text-sm font-semibold">🔍 학번/사번 검색:</span>
       <input type="text" id="searchID" class="border border-gray-300 rounded px-2 py-1 text-sm" placeholder="예: 12345678">
-      <button onclick="filterByID()" class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-sm">조회</button>
-      <button onclick="clearSearch()" class="bg-gray-300 hover:bg-gray-400 px-3 py-1 rounded text-sm">전체보기</button>
-      <button onclick="downloadExcel()" class="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded text-sm">xlsx로 저장</button>
+      <button id="searchBtn" onclick="filterByID()" class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-sm">조회</button>
+      <button id="clearBtn" onclick="clearSearch()" class="bg-gray-300 hover:bg-gray-400 px-3 py-1 rounded text-sm">전체보기</button>
+      <button id="excelBtn" onclick="downloadExcel()" class="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded text-sm">xlsx로 저장</button>
     </div>
 
     <div class="overflow-x-auto overflow-y-auto max-h-[250px] mx-12">
@@ -193,10 +192,11 @@
     </div>
 
     <footer class="mt-8 px-4 py-4 border-t text-xs text-gray-500 flex items-center justify-between">
+      <!-- 좌측: 텍스트 -->
       <div class="text-left">
         <p>
           © 2025 QuantStudio 예약 시스템. All rights reserved.<br>
-          Developed and maintained by Janghyun Choi. Powered by Google Sheets API v4 and Electron v28.3.3.<br>
+          Developed by Janghyun Choi. Powered by Google Sheets API v4 and Electron v28.3.3.<br>
           디자인 및 기능은 연구 목적과 편의를 위해 최적화되었습니다.<br>
           <a href="https://opensource.org/licenses/MIT" target="_blank" class="text-blue-500 underline">MIT License (view)</a>
           &nbsp;|&nbsp;
@@ -204,6 +204,7 @@
         </p>
       </div>
     
+      <!-- 우측: 로고 -->
       <div class="flex items-center ml-4">
         <img src="assets/logo.png" alt="Inha" class="w-16 h-auto">
       </div>
@@ -212,11 +213,32 @@
     <script>
       let currentDate = null;
       let loggedInUser = null;
-    
+      let savedScrollY = 0;
+      
+      window.addEventListener("blur", () => {
+          savedScrollY = window.scrollY;
+      });
+      
       window.addEventListener("DOMContentLoaded", async () => {
+        document.body.addEventListener("click", (e) => {
+          const link = e.target.closest('a[target="_blank"]');
+          if (link) {
+            e.preventDefault();
+            window.electronAPI.openExternal(link.href);
+          }
+        });
+
         window.electronAPI.onRegainFocus(() => {
             const firstInput = document.querySelector('input, textarea');
-            firstInput?.focus();
+            if (firstInput) {
+                const val = firstInput.value;
+                firstInput.blur();
+                firstInput.focus();
+                if (firstInput.setSelectionRange) {
+                    firstInput.setSelectionRange(val.length, val.length);
+                }
+            }
+            window.scrollTo(0, savedScrollY);
         });
         
         const loginBtn = document.getElementById("googleLoginBtn");
@@ -228,7 +250,6 @@
         const clearBtn = document.getElementById("clearBtn") || null;
         const excelBtn = document.getElementById("excelBtn") || null;
     
-        // login status
         const result = await window.electronAPI.checkLoginStatus();
         if (result.loggedIn) {
           loggedInUser = result.user.email;
@@ -269,7 +290,6 @@
           clearReservations();
         }
     
-        // login button
         loginBtn.addEventListener("click", async () => {
           const isLoggedIn = loggedInUser !== null;
     
@@ -321,16 +341,39 @@
               loadReservations(currentDate);
             }
     
-            // whitelist
             else if (result.status === "notAllowed") {
-              window.currentUserEmail = result.user.email;
-              document.getElementById("accessRequestContainer")?.classList.remove("hidden");
-              alert(`🚫 ${result.user.email}은 등록되지 않은 사용자입니다. 요청을 보내주세요.`);
+              if (result.user && result.user.email) {
+                window.currentUserEmail = result.user.email;
+                document.getElementById("accessRequestContainer")?.classList.remove("hidden");
+                alert(`🚫 ${result.user.email}은 등록되지 않은 사용자입니다. 요청을 보내주세요.`);
+              } else {
+                alert("🚫 등록되지 않은 사용자 정보 처리 중 오류가 발생했습니다.");
+              }
             }
           }
         });
+        
+        window.electronAPI.onLoginComplete((user) => {
+          loggedInUser = user.email;
+          loginBtn.innerText = `✅ 로그인됨 (${loggedInUser})\n클릭 시 로그아웃`;
+          loginBtn.dataset.loggedIn = "true";
+          loginBtn.disabled = false;
+
+          if (submitBtn) submitBtn.disabled = false;
+          if (cancelBtn) cancelBtn.disabled = false;
+          if (searchBtn) searchBtn.disabled = false;
+          if (clearBtn) clearBtn.disabled = false;
+          if (excelBtn) excelBtn.disabled = false;
+          if (dateInput) {
+            dateInput.disabled = false;
+            dateInput.classList.remove("hidden");
+          }
+          navButtons.forEach(btn => btn.disabled = false);
+
+          currentDate = getKSTDate();
+          loadReservations(currentDate);
+        });
     
-        // whitelist-form
         document.getElementById("accessRequestForm")?.addEventListener("submit", (e) => {
           e.preventDefault();
           const name = document.getElementById("reqName").value;
@@ -352,15 +395,15 @@
     async function loadReservations(date) {
       updateDateTitle(date);
       try {
-        const sheetData = await window.electronAPI.getSheetData();
-        const dateStr = formatDate(date);
+        const sheetData = await window.electronAPI.getSheetData(); // ResponseTable 원본 가져옴
+        const dateStr = formatDate(date); // 'YYYY-MM-DD'
         
+        // ResponseTable → getReservations() 형식으로 변환
         const processed = window.dataUtils.processRawReservations(sheetData, dateStr);
         
-        renderTable(processed);
-        renderTimeline(processed);
+        renderTable(processed);    // 기존 테이블 렌더링 함수
+        renderTimeline(processed); // 타임라인 렌더링 함수
       } catch (error) {
-        console.error("예약 데이터 로딩 실패:", error);
         alert("예약 정보를 불러오는 데 실패했습니다.");
       }
     }
@@ -410,7 +453,6 @@
         renderTable(processed);
         renderTimeline(processed);
       } catch (error) {
-        console.error("예약 데이터 로딩 실패:", error);
         alert("예약 정보를 불러오는 데 실패했습니다.\n" + error.message);
       }
     }
@@ -426,7 +468,6 @@
         return;
       }
     
-      // sorting logic
       if (shouldSort) {
         data.sort((a, b) => {
           const statusOrder = (s) => (s === "예약확정" ? 0 : 1);
@@ -440,7 +481,6 @@
         });
       }
     
-      // renderTable
       data.forEach(row => {
         const status = row[0];
         const name = row[1];
@@ -488,8 +528,6 @@
               const aTime = new Date(aDateStr);
               const bTime = new Date(bDateStr);
               
-              console.log("정렬 비교 →", aDateStr, bDateStr, "결과:", bTime - aTime);
-              
               if (isNaN(aTime.getTime()) || isNaN(bTime.getTime())) return 0;
               return bTime - aTime;
           });
@@ -497,7 +535,6 @@
         fullReservationData = filtered;
         renderTable(filtered, false);
       } catch (err) {
-        console.error("전체 검색 실패:", err);
         alert("검색 중 오류 발생");
       }
     }
@@ -725,7 +762,6 @@
         loadReservations(currentDate);
         
       } catch (err) {
-        console.error("예약 실패:", err);
         alert("예약 요청 실패");
       } finally {
         button.disabled = false;
@@ -771,7 +807,6 @@
         alert("✅ 예약 취소 완료됨: " + text);
         loadReservations(currentDate);
       } catch (err) {
-        console.error("취소 실패:", err);
         alert("예약 취소 요청 실패");
       } finally {
         button.disabled = false;
@@ -794,16 +829,9 @@
       document.getElementById("timelineContainer").innerHTML = "";
     }
 
-    function clearSearch() {
-      if (!window.loggedInUser) return;
-      document.getElementById("searchID").value = "";
-      filterByID();
-    }
-    
-    function downloadExcel() {
-      if (!window.loggedInUser) return;
-      exportToExcel();
-    }
+    window.clearSearch = clearSearch;
+    window.downloadExcel = downloadExcel;
+    window.filterByID = filterByID;
 
     </script>
     

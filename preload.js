@@ -1,6 +1,7 @@
-const { contextBridge, ipcRenderer } = require('electron');
+const { contextBridge, ipcRenderer, shell } = require('electron');
 
 contextBridge.exposeInMainWorld('electronAPI', {
+  openExternal: (url) => shell.openExternal(url),
   sendAccessRequest: (data) => ipcRenderer.send('send-access-request', data),
   googleLogin: () => ipcRenderer.invoke('google-login'),
   getSheetData: () => ipcRenderer.invoke('fetch-sheet-data'),
@@ -8,7 +9,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
   cancel: (payload) => ipcRenderer.invoke('submit-cancellation', payload),
   checkLoginStatus: () => ipcRenderer.invoke('check-login-status'),
   toggleGoogleLogin: () => ipcRenderer.invoke('toggle-google-login'),
-  onRegainFocus: (callback) => ipcRenderer.on('regain-focus', callback)
+  onRegainFocus: (callback) => ipcRenderer.on('regain-focus', callback),
+  onLoginComplete: (callback) => ipcRenderer.on('login-complete', (_e, user) => callback(user)) // open the link through external browser
 });
 
 contextBridge.exposeInMainWorld('dataUtils', {

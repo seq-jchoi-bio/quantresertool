@@ -25,10 +25,11 @@ Windows / macOS 모두에서 실행 가능하며, Google 로그인 기반으로 
 
 | 운영체제 | 파일명 | 다운로드 | MD5 |
 |----------|--------|----------|----------|
-| macOS  | `QuantReserTool-1.0.0.dmg` | [📥 다운로드](https://github.com/seq-jchoi-bio/quantresertool/releases/download/v1.0.0/QuantReserTool-1.0.0-Portable.exe) | 30ed403e7c4f1aa2773a24992cd8b22b |
-| Windows    | `QuantReserTool-1.0.0-Portable.exe` | [📥 다운로드](https://github.com/seq-jchoi-bio/quantresertool/releases/download/v1.0.0/QuantReserTool-1.0.0.dmg) | f9f768c048c3a83963c0c26ad8767c24 |
+| macOS  | `QuantReserTool-1.1.0.dmg` | [📥 다운로드](https://github.com/seq-jchoi-bio/quantresertool/releases/download/v1.1.0/QuantReserTool-1.1.0-Portable.exe) | 31085e3f1b5c626005446a8c7c5f92ee |
+| Windows    | `QuantReserTool-1.1.0-Portable.exe` | [📥 다운로드](https://github.com/seq-jchoi-bio/quantresertool/releases/download/v1.1.0/QuantReserTool-1.1.0-Portable.exe) | 6205ab2839594a4f4ec226a408d62d9d |
 
 > ⚠️ Linux는 현재 지원되지 않습니다.
+
 > ⚠️ 파일 손상시 MD5를 비교해보세요.
 
 ---

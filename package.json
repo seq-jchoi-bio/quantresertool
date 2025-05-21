@@ -1,7 +1,8 @@
 {
   "name": "quantresertool",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "QuantStudio Real-Time PCR 시스템 예약 관리 프로그램",
+  "author": "Janghyun Choi <jchoi@inha.ac.kr>",
   "main": "main.js",
   "scripts": {
     "start": "electron .",
@@ -15,8 +16,10 @@
       "**/*",
       "assets/**",
       "config.enc",
-      "!config.json",
-      "!encrypt-config.js"
+      "service-key.enc",
+      "!backup/**",
+      "!.DS_Store",
+      "!.gitignore"
     ],
     "directories": {
       "buildResources": "assets"

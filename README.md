@@ -1,7 +1,7 @@
 # QuantStudio 1 Real-Time PCR System Reservation Application
 > 🇰🇷 **한국어 설명은 [README_KR.md](README_KR.md)에서 확인할 수 있습니다.**
 
-![Electron](https://img.shields.io/badge/Built%20with-Electron-47848F?logo=electron\&logoColor=white) ![Google Cloud](https://img.shields.io/badge/Backend-Google%20Cloud-4285F4?logo=google-cloud\&logoColor=white) ![License: MIT](https://img.shields.io/badge/License-MIT-green.svg) ![version](https://img.shields.io/badge/release-1.0.0-blue) ![Status](https://img.shields.io/badge/status-stable-green)
+![Electron](https://img.shields.io/badge/Built%20with-Electron-47848F?logo=electron\&logoColor=white) ![Google Cloud](https://img.shields.io/badge/Backend-Google%20Cloud-4285F4?logo=google-cloud\&logoColor=white) ![License: MIT](https://img.shields.io/badge/License-MIT-green.svg) ![version](https://img.shields.io/badge/release-1.1.0-blue) ![Status](https://img.shields.io/badge/status-stable-green)
 ![macOS](https://img.shields.io/badge/macOS-supported-0078D6?logo=apple\&logoColor=white) ![Windows](https://img.shields.io/badge/Windows-Supported-0078D6?logo=Devian\&logoColor=white)
 
 This is a dedicated booking system for the QuantStudio 1 instrument, developed using Google Sheets API and Electron. It runs on both Windows and macOS, and restricts access via Google login.
@@ -24,10 +24,11 @@ This is a dedicated booking system for the QuantStudio 1 instrument, developed u
 
 | OS      | Filename                            | Download                                                                                                                  | MD5                              |
 | ------- | ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------- | -------------------------------- |
-| macOS   | `QuantReserTool-1.0.0.dmg`          | [📥 Download](https://github.com/seq-jchoi-bio/quantresertool/releases/download/v1.0.0/QuantReserTool-1.0.0-Portable.exe) | 30ed403e7c4f1aa2773a24992cd8b22b |
-| Windows | `QuantReserTool-1.0.0-Portable.exe` | [📥 Download](https://github.com/seq-jchoi-bio/quantresertool/releases/download/v1.0.0/QuantReserTool-1.0.0.dmg)          | f9f768c048c3a83963c0c26ad8767c24 |
+| macOS   | `QuantReserTool-1.1.0.dmg`          | [📥 Download](https://github.com/seq-jchoi-bio/quantresertool/releases/download/v1.1.0/QuantReserTool-1.0.0.dmg) | 31085e3f1b5c626005446a8c7c5f92ee |
+| Windows | `QuantReserTool-1.1.0-Portable.exe` | [📥 Download](https://github.com/seq-jchoi-bio/quantresertool/releases/download/v1.1.0/QuantReserTool-1.1.0-Portable.exe)          | 6205ab2839594a4f4ec226a408d62d9d |
 
 > ⚠️ Linux is currently not supported.
+
 > ⚠️ Check MD5 if you suspect file corruption.
 
 ---
