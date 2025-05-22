@@ -24,7 +24,7 @@ This is a dedicated booking system for the QuantStudio 1 instrument, developed u
 
 | OS      | Filename                            | Download                                                                                                                  | MD5                              |
 | ------- | ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------- | -------------------------------- |
-| macOS   | `QuantReserTool-1.1.0.dmg`          | [📥 Download](https://github.com/seq-jchoi-bio/quantresertool/releases/download/v1.1.0/QuantReserTool-1.0.0.dmg) | 31085e3f1b5c626005446a8c7c5f92ee |
+| macOS   | `QuantReserTool-1.1.0.dmg`          | [📥 Download](https://github.com/seq-jchoi-bio/quantresertool/releases/download/v1.1.0/QuantReserTool-1.1.0.dmg) | 31085e3f1b5c626005446a8c7c5f92ee |
 | Windows | `QuantReserTool-1.1.0-Portable.exe` | [📥 Download](https://github.com/seq-jchoi-bio/quantresertool/releases/download/v1.1.0/QuantReserTool-1.1.0-Portable.exe)          | 6205ab2839594a4f4ec226a408d62d9d |
 
 > ⚠️ Linux is currently not supported.
