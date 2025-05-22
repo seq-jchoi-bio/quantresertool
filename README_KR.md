@@ -1,7 +1,7 @@
 # QuantStudio 1 Real-Time PCR System 예약 프로그램
 > 🇺🇸 **For English version, please refer to [README.md](README.md).**
 
-![Electron](https://img.shields.io/badge/Built%20with-Electron-47848F?logo=electron&logoColor=white) ![Google Cloud](https://img.shields.io/badge/Backend-Google%20Cloud-4285F4?logo=google-cloud&logoColor=white) ![License: MIT](https://img.shields.io/badge/License-MIT-green.svg) ![version](https://img.shields.io/badge/release-1.0.0-blue) ![Status](https://img.shields.io/badge/status-stable-green)
+![Electron](https://img.shields.io/badge/Built%20with-Electron-47848F?logo=electron&logoColor=white) ![Google Cloud](https://img.shields.io/badge/Backend-Google%20Cloud-4285F4?logo=google-cloud&logoColor=white) ![License: MIT](https://img.shields.io/badge/License-MIT-green.svg) ![version](https://img.shields.io/badge/release-1.1.0-blue) ![Status](https://img.shields.io/badge/status-stable-green)
 ![macOS](https://img.shields.io/badge/macOS-supported-0078D6?logo=apple&logoColor=white) ![Windows](https://img.shields.io/badge/Windows-Supported-0078D6?logo=Devian&logoColor=white)
 
 Google Sheets API와 Electron을 활용하여 개발된 **QuantStudio 1 장비 전용 예약 시스템**입니다.  
